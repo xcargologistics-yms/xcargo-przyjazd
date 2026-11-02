@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Potwierdzenie przyjazdu — xCargo</title>
+<style>
+:root { --asphalt:#1b1e23; --steel:#5a616b; --line:#d4d7db; --paper:#f4f5f3; --card:#ffffff; --hivis:#ffc400; --hivis-d:#b88a00; --plate-blue:#003fa3; --ok:#1e7c3a; --err:#b3261e; --warn:#8a6100; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html { -webkit-text-size-adjust:100%; }
+body { font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; background:var(--paper); color:var(--asphalt); min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+.hazard { width:100%; height:10px; background:repeating-linear-gradient(-45deg,var(--hivis) 0 16px,var(--asphalt) 16px 32px); }
+.draft { width:100%; background:var(--asphalt); color:var(--hivis); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; text-align:center; padding:6px 10px; }
+header { width:100%; max-width:480px; padding:20px 20px 4px; }
+.brand { font-size:13px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--steel); }
+h1 { font-size:26px; line-height:1.2; font-weight:800; margin-top:6px; letter-spacing:-.01em; }
+.sub { margin-top:6px; font-size:15px; color:var(--steel); line-height:1.45; }
+main { width:100%; max-width:480px; padding:16px 20px 40px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 18px; }
+.field { margin-bottom:18px; }
+label.lbl { display:block; font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--steel); margin-bottom:6px; }
+input[type="text"] { width:100%; font-size:18px; padding:14px; border:1.5px solid var(--line); border-radius:10px; background:#fff; color:var(--asphalt); font-family:inherit; }
+input[type="text"]:focus { outline:3px solid var(--hivis); outline-offset:1px; border-color:var(--hivis-d); }
+.plate-wrap { display:flex; border:2px solid var(--asphalt); border-radius:8px; overflow:hidden; background:#fff; }
+.plate-wrap:focus-within { outline:3px solid var(--hivis); outline-offset:1px; }
+.plate-band { width:30px; background:var(--plate-blue); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; font-weight:700; letter-spacing:.02em; gap:2px; flex:0 0 auto; }
+.plate-band .stars { font-size:8px; letter-spacing:.1em; }
+.plate-wrap input { border:none; border-radius:0; font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-family:"Arial Narrow",Arial,sans-serif; font-size:22px; padding:12px; }
+.plate-wrap input:focus { outline:none; }
+
+/* ---- ABC trigger (on form) ---- */
+.abc-open { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; width:100%; text-align:left; font-family:inherit; color:inherit; padding:14px; border:1.5px solid var(--line); border-radius:10px; background:#fffdf2; margin-bottom:20px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.abc-open:focus-visible { outline:3px solid var(--hivis); outline-offset:1px; }
+.abc-open.missing { border-color:var(--err); background:#fdf3f2; }
+.abc-open.complete { border-color:#b9d9c3; }
+.abc-open .txt { flex:1 1 100%; min-width:0; }
+.abc-title { font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+.abc-hint { font-size:13px; color:var(--steel); margin-top:2px; line-height:1.4; }
+.pill { flex:0 0 auto; font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:6px 10px; border-radius:99px; background:var(--asphalt); color:var(--hivis); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.abc-open.complete .pill { background:var(--ok); color:#fff; }
+.abc-open.missing .pill { background:var(--err); color:#fff; }
+.chev { display:none; }
+
+/* ---- full-screen sheet ---- */
+body.lock { overflow:hidden; }
+.sheet { position:fixed; inset:0; z-index:50; display:none; background:rgba(27,30,35,.55); }
+.sheet.open { display:block; }
+.panel { position:absolute; left:0; right:0; bottom:0; top:0; max-width:480px; margin:0 auto; background:var(--paper); display:flex; flex-direction:column; height:100vh; height:100dvh; }
+.sheet-head { flex:0 0 auto; background:var(--card); border-bottom:1px solid var(--line); padding:0 0 12px; }
+.sheet-head .hazard { height:8px; }
+.sheet-top { display:flex; align-items:center; gap:10px; padding:12px 12px 0 18px; }
+.sheet-top .abc-title { flex:1; font-size:18px; font-weight:800; }
+.close { flex:0 0 auto; width:44px; height:44px; border:1.5px solid var(--line); border-radius:10px; background:#fff; font-size:22px; font-weight:700; line-height:1; color:var(--asphalt); cursor:pointer; font-family:inherit; }
+.close:focus-visible { outline:3px solid var(--hivis); outline-offset:1px; }
+.sheet-head .abc-hint { padding:4px 18px 0; }
+.progress { display:flex; align-items:center; gap:10px; margin:12px 18px 0; }
+.bar { flex:1; height:8px; background:var(--line); border-radius:99px; overflow:hidden; }
+.bar > i { display:block; height:100%; width:0; background:var(--ok); transition:width .2s; }
+.count { font-size:13px; font-weight:800; color:var(--steel); min-width:42px; text-align:right; font-variant-numeric:tabular-nums; }
+.sheet-body { flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:12px 12px 8px; display:flex; flex-direction:column; gap:10px; scroll-padding-top:12px; }
+.sheet-foot { flex:0 0 auto; background:var(--card); border-top:1px solid var(--line); padding:12px 14px calc(12px + env(safe-area-inset-bottom)); }
+fieldset.item { border:1.5px solid var(--line); border-radius:12px; background:#fff; padding:12px 10px 10px; min-width:0; }
+fieldset.item.missing { border-color:var(--err); background:#fdf3f2; }
+fieldset.item.answered { border-color:#b9d9c3; }
+legend { display:flex; align-items:flex-start; gap:8px; padding:0 4px; font-size:15px; font-weight:700; line-height:1.3; }
+legend .n { flex:0 0 auto; min-width:24px; height:24px; border-radius:6px; background:var(--asphalt); color:var(--hivis); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:-1px; }
+.opts { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.opt { position:relative; display:flex; align-items:center; gap:10px; padding:11px 10px; min-height:52px; border:1.5px solid var(--line); border-radius:9px; cursor:pointer; font-size:15px; line-height:1.3; background:#fff; -webkit-tap-highlight-color:transparent; }
+.opt input { position:absolute; top:0; left:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:1; }
+.opt .chk { margin-left:auto; flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--asphalt); color:var(--hivis); font-size:14px; font-weight:800; display:none; align-items:center; justify-content:center; }
+.opt.sel .chk { display:flex; }
+.opt .dot { flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:2px solid var(--steel); background:#fff; display:flex; align-items:center; justify-content:center; }
+.opt .tag { flex:0 0 auto; width:24px; height:24px; border-radius:6px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; color:#fff; }
+.tag.A { background:var(--ok); } .tag.B { background:var(--hivis); color:var(--asphalt); } .tag.C { background:var(--err); }
+.opt.sel { border-color:var(--asphalt); background:#fff8d6; box-shadow:inset 0 0 0 1px var(--asphalt); font-weight:700; }
+.opt.sel .dot { border-color:var(--asphalt); }
+.opt.sel .dot::after { content:""; width:10px; height:10px; border-radius:50%; background:var(--asphalt); }
+.opt.focus { outline:3px solid var(--hivis); outline-offset:1px; }
+.ack { display:flex; align-items:flex-start; gap:12px; padding:14px; border:1.5px solid var(--line); border-radius:12px; background:#fffdf2; cursor:pointer; }
+.ack.missing { border-color:var(--err); background:#fdf3f2; }
+.ack input { width:26px; height:26px; flex:0 0 auto; margin-top:1px; accent-color:var(--asphalt); cursor:pointer; }
+.ack .t { font-size:13px; color:var(--steel); line-height:1.4; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+.btn { width:100%; padding:18px; font-size:18px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; font-family:inherit; color:var(--asphalt); background:var(--hivis); border:2px solid var(--asphalt); border-radius:12px; cursor:pointer; }
+.btn:focus-visible { outline:3px solid var(--asphalt); outline-offset:2px; }
+.btn.off { opacity:.55; }
+@media (prefers-reduced-motion:no-preference) { .sheet.open .panel { animation:slide .22s ease-out; } @keyframes slide { from { transform:translateY(24px); opacity:0; } to { transform:none; opacity:1; } } }
+button#submitBtn { width:100%; padding:18px; font-size:18px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; font-family:inherit; color:var(--asphalt); background:var(--hivis); border:2px solid var(--asphalt); border-radius:12px; cursor:pointer; }
+button#submitBtn:focus-visible { outline:3px solid var(--asphalt); outline-offset:2px; }
+.msg { display:none; margin-top:16px; padding:14px; border-radius:10px; font-size:15px; line-height:1.45; background:#fdecea; color:var(--err); border:1px solid #f2c4c0; }
+.done { display:none; text-align:center; padding:36px 18px; }
+.done .check { width:74px; height:74px; border-radius:50%; background:var(--ok); color:#fff; font-size:40px; line-height:74px; margin:0 auto 18px; }
+.done h2 { font-size:24px; font-weight:800; margin-bottom:8px; }
+.done p { font-size:16px; color:var(--steel); line-height:1.5; }
+.done .stamp { display:inline-block; margin-top:16px; font-size:14px; font-weight:700; letter-spacing:.06em; border:1.5px dashed var(--line); border-radius:8px; padding:8px 14px; }
+.invalid { display:none; text-align:center; padding:36px 18px; }
+.invalid h2 { font-size:22px; font-weight:800; margin-bottom:8px; }
+.invalid p { font-size:15px; color:var(--steel); line-height:1.5; }
+footer { margin-top:auto; padding:18px; font-size:12px; color:var(--steel); text-align:center; }
+</style>
+</head>
+<body>
+<div class="hazard" aria-hidden="true"></div>
+<header>
+  <div class="brand">xCargoLogistic · Plac</div>
+  <h1>Potwierdzenie przyjazdu</h1>
+  <p class="sub" id="subText">Uzupełnij swoje dane i potwierdź, że jesteś na placu.</p>
+</header>
+<main>
+  <div class="card" id="formCard">
+    <div class="field">
+      <label class="lbl" for="driverName">Imię i nazwisko kierowcy</label>
+      <input type="text" id="driverName" autocomplete="name">
+    </div>
+    <div class="field">
+      <label class="lbl" for="truckPlate">Nr rejestracyjny auta</label>
+      <div class="plate-wrap"><div class="plate-band" aria-hidden="true"><span class="stars">★★★</span><span>PL</span></div>
+      <input type="text" id="truckPlate" autocomplete="off" autocapitalize="characters"></div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="trailerPlate">Nr rejestracyjny naczepy</label>
+      <div class="plate-wrap"><div class="plate-band" aria-hidden="true"><span class="stars">★★★</span><span>PL</span></div>
+      <input type="text" id="trailerPlate" autocomplete="off" autocapitalize="characters"></div>
+    </div>
+
+    <button type="button" class="abc-open" id="abcOpen" aria-haspopup="dialog">
+      <span class="txt">
+        <span class="abc-title" style="display:block">Potwierdź ABC</span>
+        <span class="abc-hint" style="display:block" id="abcHint">Sprawdź stan pojazdu punkt po punkcie.</span>
+      </span>
+      <span class="pill" id="abcPill">Wymagane</span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+
+    <button id="submitBtn" type="button">Potwierdź przyjazd</button>
+    <div class="msg" id="errBox" role="alert"></div>
+  </div>
+
+  <div class="card done" id="doneCard">
+    <div class="check" aria-hidden="true">✓</div>
+    <h2>Przyjazd potwierdzony</h2>
+    <p>Dyspozytor xCargo otrzymał informację, że oczekujesz na placu na załadunek. Pozostań przy pojeździe i czekaj na wezwanie.</p>
+    <span class="stamp" id="stamp"></span>
+      <div class="card invalid" id="invalidCard">
+    <h2>Link jest nieprawidłowy</h2>
+    <p>Ten link nie zawiera danych awizacji. Otwórz link dokładnie w takiej postaci, w jakiej otrzymałeś go w wiadomości SMS, albo skontaktuj się z dyspozytorem xCargo.</p>
+  </div>
+</main>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="abcTitle">
+  <div class="panel">
+    <div class="sheet-head">
+      <div class="hazard" aria-hidden="true"></div>
+      <div class="sheet-top">
+        <div class="abc-title" id="abcTitle">Potwierdź ABC</div>
+        <button type="button" class="close" id="closeBtn" aria-label="Zamknij">✕</button>
+      </div>
+      <div class="abc-hint">Dla każdego punktu wybierz jeden status zgodny ze stanem faktycznym.</div>
+      <div class="progress"><div class="bar"><i id="barFill"></i></div><div class="count" id="count">0/0</div></div>
+    </div>
+    <div class="sheet-body" id="sheetBody">
+      <div id="items" style="display:contents"></div>
+      <label class="ack" id="ack">
+        <input type="checkbox" id="abcConfirmed">
+        <span class="t">Zapoznałem się z zasadami obowiązującymi na placu i zobowiązuję się ich przestrzegać.</span>
+      </label>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn off" id="doneBtn">Gotowe</button></div>
+  </div>
+</div>
+<footer>xCargoLogistic — system zarządzania placem (YMS)</footer>
+
+<script>
+/* =============================================================
+   KONFIGURACJA — jak na stronie głównej potwierdzenia przyjazdu.
+   ============================================================= */
+var WEBHOOK_URL = "https://webhooks.creatio.com/webhooks/cb4d2007-54c7-466b-86a9-ca54044dcb43";
+var ENTITY_NAME = "UsrArrivalConfirmation";
+var COL = {
+  guid:       "UsrAwizacjaGuid",
+  name:       "UsrDriverName",
+  truck:      "UsrTruckPlate",
+  trailer:    "UsrTrailerPlate",
+  abc:        "UsrAbcConfirmed",
+  abcDetails: "UsrAbcDetails"   /* tekstowa kolumna na wyniki listy ABC */
+};
+/* Ustaw na true dopiero, gdy kolumna UsrAbcDetails istnieje w Creatio
+   i jest dodana do webhooka. Do tego czasu wysyłane są tylko dotychczasowe pola. */
+var SEND_ABC_DETAILS = true;
+
+var awGuid = (new URLSearchParams(window.location.search).get("aw") || "").trim();
+if (!awGuid) {
+  document.getElementById("formCard").style.display = "none";
+  document.getElementById("subText").style.display = "none";
+  document.getElementById("invalidCard").style.display = "block";
+}
+
+var ITEMS = [{"name": "Kamizelka", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale brudna lub uszkodzona"}, {"l": "B", "t": "tak ale niezałożona w momencie weryfikacji"}, {"l": "C", "t": "nie"}]}, {"name": "Buty ochronne", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale uszkodzone"}, {"l": "B", "t": "tak ale niezałożone w momencie weryfikacji"}, {"l": "C", "t": "nie"}]}, {"name": "Pusta naczepa", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale opróżniona na wniosek załadowcy"}, {"l": "B", "t": "tak ale puste palety na naczepie"}, {"l": "C", "t": "nie"}]}, {"name": "Należyty stan higieniczno-sanitarny", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale akceptowalny dopiero po usprawnieniu"}, {"l": "C", "t": "nie"}]}, {"name": "Wyposażenie do zabezpieczenia ładunku", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale założone na wniosek załadowcy"}, {"l": "C", "t": "nie"}]}, {"name": "Brak uszkodzeń podłogi, ścian, plandeki", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale uszkodzenia drobne nie zagrażają transportowi"}, {"l": "C", "t": "nie"}]}, {"name": "Brak wycieku płynów, olejów, itp.", "o": [{"l": "A", "t": "tak"}, {"l": "C", "t": "nie"}]}, {"name": "Kontrola sygnału dźwiękowego podczas cofania", "o": [{"l": "A", "t": "OK"}, {"l": "C", "t": "brak"}]}, {"name": "Stan techniczny opon", "o": [{"l": "A", "t": "właściwy"}, {"l": "C", "t": "niewłaściwy"}]}, {"name": "Światła przednie i tylne, klakson, lusterka", "o": [{"l": "A", "t": "tak"}, {"l": "C", "t": "nie"}]}, {"name": "Naczepa - drzwi zamknięte", "o": [{"l": "A", "t": "zamknięta"}, {"l": "C", "t": "niezamknięta"}]}, {"name": "KLIN", "o": [{"l": "A", "t": "tak"}, {"l": "B", "t": "tak ale nie założony w momencie weryfikacji"}, {"l": "C", "t": "brak"}]}];
+var itemsEl = document.getElementById('items');
+var html = '';
+ITEMS.forEach(function (it, i) {
+  html += '<fieldset class="item" data-i="' + i + '"><legend><span class="n">' + (i + 1) + '</span><span>' + it.name + '</span></legend><div class="opts">';
+  it.o.forEach(function (o, j) {
+    html += '<label class="opt"><input type="radio" name="abc' + i + '" value="' + o.l + j + '"><span class="dot"></span><span class="tag ' + o.l + '">' + o.l + '</span><span>' + o.t.charAt(0).toUpperCase() + o.t.slice(1) + '</span><span class="chk" aria-hidden="true">✓</span></label>';
+  });
+  html += '</div></fieldset>';
+});
+itemsEl.innerHTML = html;
+</script>
+<script>
+var fieldsets = [].slice.call(document.querySelectorAll('fieldset.item'));
+var bar = document.getElementById('barFill'), count = document.getElementById('count');
+var ack = document.getElementById('ack'), ackBox = document.getElementById('abcConfirmed');
+var sheet = document.getElementById('sheet'), body = document.getElementById('sheetBody');
+var openBtn = document.getElementById('abcOpen'), pill = document.getElementById('abcPill'), hint = document.getElementById('abcHint');
+var doneBtn = document.getElementById('doneBtn'), errBox = document.getElementById('errBox');
+var touched = false;
+
+function answered(fs) { return !!fs.querySelector('input:checked'); }
+function remaining() { return fieldsets.filter(function (f) { return !answered(f); }).length + (ackBox.checked ? 0 : 1); }
+function complete() { return remaining() === 0; }
+
+function update() {
+  var n = fieldsets.filter(answered).length, left = remaining();
+  count.textContent = n + '/' + fieldsets.length;
+  bar.style.width = (fieldsets.length ? n / fieldsets.length * 100 : 0) + '%';
+  fieldsets.forEach(function (fs) { var a = answered(fs); fs.classList.toggle('answered', a); if (a) fs.classList.remove('missing'); });
+  if (ackBox.checked) ack.classList.remove('missing');
+  doneBtn.classList.toggle('off', left > 0);
+  doneBtn.textContent = left > 0 ? 'Pozostało: ' + left : 'Gotowe';
+  openBtn.classList.toggle('complete', left === 0);
+  if (left === 0) { openBtn.classList.remove('missing'); pill.textContent = '✓ ' + n + '/' + fieldsets.length; hint.textContent = 'Wszystkie punkty uzupełnione. Dotknij, aby zmienić.'; }
+  else if (n === 0 && !ackBox.checked) { pill.textContent = 'Wymagane'; hint.textContent = 'Sprawdź stan pojazdu punkt po punkcie.'; }
+  else { pill.textContent = n + '/' + fieldsets.length; hint.textContent = 'Dokończ uzupełnianie listy.'; }
+}
+function syncOpts() { [].forEach.call(document.querySelectorAll('.opt'), function (l) { l.classList.toggle('sel', l.querySelector('input').checked); }); }
+document.getElementById('items').addEventListener('change', function () { var y = body.scrollTop; syncOpts(); update(); body.scrollTop = y; });
+document.getElementById('items').addEventListener('focusin', function (e) { var l = e.target.closest('.opt'); if (l && e.target.matches(':focus-visible')) l.classList.add('focus'); });
+document.getElementById('items').addEventListener('focusout', function (e) { var l = e.target.closest('.opt'); if (l) l.classList.remove('focus'); });
+ackBox.addEventListener('change', update);
+
+function openSheet(scrollToFirstMissing) {
+  sheet.classList.add('open'); document.body.classList.add('lock');
+  var first = scrollToFirstMissing && (fieldsets.filter(function (f) { return !answered(f); })[0] || (!ackBox.checked && ack));
+  if (first) { first.scrollIntoView({ block: 'start' }); } else { body.scrollTop = 0; }
+  document.getElementById('closeBtn').focus({ preventScroll: true });
+}
+function closeSheet() { sheet.classList.remove('open'); document.body.classList.remove('lock'); openBtn.focus({ preventScroll: true }); }
+openBtn.addEventListener('click', function () { openSheet(false); });
+document.getElementById('closeBtn').addEventListener('click', closeSheet);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
+
+doneBtn.addEventListener('click', function () {
+  if (complete()) { closeSheet(); return; }
+  fieldsets.forEach(function (fs) { if (!answered(fs)) fs.classList.add('missing'); });
+  if (!ackBox.checked) ack.classList.add('missing');
+  var first = fieldsets.filter(function (f) { return !answered(f); })[0] || ack;
+  first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+document.getElementById('submitBtn').addEventListener('click', function () {
+  var problems = [], first = null;
+  function need(msg, target) { problems.push(msg); if (!first) first = target; }
+  var name = document.getElementById('driverName'), truck = document.getElementById('truckPlate'), trailer = document.getElementById('trailerPlate');
+  if (!name.value.trim()) need('Wpisz imię i nazwisko kierowcy.', name);
+  if (!truck.value.trim()) need('Wpisz numer rejestracyjny auta.', truck);
+  if (!trailer.value.trim()) need('Wpisz numer rejestracyjny naczepy.', trailer);
+  var abcLeft = remaining();
+  if (abcLeft) { openBtn.classList.add('missing'); need('Uzupełnij ABC: wybierz status dla każdego punktu i potwierdź zasady.', openBtn); }
+  if (problems.length) {
+    errBox.innerHTML = problems.join('<br>'); errBox.style.display = 'block';
+    if (first === openBtn && problems.length === 1) { openSheet(true); fieldsets.forEach(function (fs) { if (!answered(fs)) fs.classList.add('missing'); }); if (!ackBox.checked) ack.classList.add('missing'); }
+    else first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  errBox.style.display = 'none';
+  sendConfirmation();
+});
+
+function abcSummary() {
+  return fieldsets.map(function (fs, i) {
+    var lab = fs.querySelector('input:checked').closest('.opt');
+    return ITEMS[i].name + ': ' + lab.querySelector('.tag').textContent + ' - ' + lab.children[3].textContent;
+  }).join('; ');
+}
+
+function sendConfirmation() {
+  var btn = document.getElementById('submitBtn');
+  if (WEBHOOK_URL.indexOf('webhooks.creatio.com') === -1) {
+    errBox.textContent = 'Formularz nie został jeszcze skonfigurowany (brak adresu webhooka). Skontaktuj się z dyspozytorem xCargo.';
+    errBox.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Wysyłanie…';
+  var data = new FormData();
+  data.append('EntityName', ENTITY_NAME);
+  data.append(COL.guid, awGuid);
+  data.append(COL.name, document.getElementById('driverName').value.trim());
+  data.append(COL.truck, document.getElementById('truckPlate').value.trim().toUpperCase());
+  data.append(COL.trailer, document.getElementById('trailerPlate').value.trim().toUpperCase());
+  data.append(COL.abc, ackBox.checked ? 'true' : 'false');
+  if (SEND_ABC_DETAILS) data.append(COL.abcDetails, abcSummary());
+  /* mode: "no-cors" — żądanie dochodzi do Creatio, ale przeglądarka nie czyta odpowiedzi. */
+  fetch(WEBHOOK_URL, { method: 'POST', body: data, mode: 'no-cors' })
+    .then(showDone)
+    .catch(function () {
+      btn.disabled = false;
+      btn.textContent = 'Potwierdź przyjazd';
+      errBox.textContent = 'Nie udało się wysłać potwierdzenia. Sprawdź zasięg internetu i spróbuj ponownie.';
+      errBox.style.display = 'block';
+    });
+}
+
+function showDone() {
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('subText').style.display = 'none';
+  var now = new Date();
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  document.getElementById('stamp').textContent = 'Zgłoszono: ' + pad(now.getDate()) + '.' + pad(now.getMonth() + 1) + '.' + now.getFullYear() + ', ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  document.getElementById('doneCard').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+update();
+</script>
+</body>
+</html>
